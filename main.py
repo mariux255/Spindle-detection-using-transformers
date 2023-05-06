@@ -62,19 +62,19 @@ def get_args_parser():
                         help="Type of positional embedding to use on top of the image features")
 
     # * Transformer
-    parser.add_argument('--enc_layers', default=6, type=int,
+    parser.add_argument('--enc_layers', default=3, type=int,
                         help="Number of encoding layers in the transformer")
-    parser.add_argument('--dec_layers', default=6, type=int,
+    parser.add_argument('--dec_layers', default=3, type=int,
                         help="Number of decoding layers in the transformer")
-    parser.add_argument('--dim_feedforward', default=2048, type=int,
+    parser.add_argument('--dim_feedforward', default=64, type=int,
                         help="Intermediate size of the feedforward layers in the transformer blocks")
-    parser.add_argument('--hidden_dim', default=256, type=int,
+    parser.add_argument('--hidden_dim', default=16, type=int,
                         help="Size of the embeddings (dimension of the transformer)")
     parser.add_argument('--dropout', default=0.1, type=float,
                         help="Dropout applied in the transformer")
-    parser.add_argument('--nheads', default=8, type=int,
+    parser.add_argument('--nheads', default=4, type=int,
                         help="Number of attention heads inside the transformer's attentions")
-    parser.add_argument('--num_queries', default=20, type=int,
+    parser.add_argument('--num_queries', default=15, type=int,
                         help="Number of query slots")
     parser.add_argument('--pre_norm', action='store_true')
 
@@ -128,7 +128,7 @@ args = parser.parse_args()
 
 
 # Loading data, setting up GPU use, setting up variables for model training
-batch_s = 1
+batch_s = 3
 
 print("Device used:")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -151,7 +151,7 @@ training_dataset = dreams_dataset()
 trainloader = DataLoader(training_dataset, batch_size=batch_s, shuffle=True, num_workers=0, collate_fn=custom_collate)
 
 
-EPOCHS = 100
+EPOCHS = 1
 NUM_CLASSES = 1
 # Defining model
 backbone = build_backbone(args)
@@ -185,26 +185,26 @@ param_dicts = [
         },
     ]
 
-dataset_train = build_dataset(image_set='train', args=args)
-dataset_val = build_dataset(image_set='val', args=args)
+#dataset_train = build_dataset(image_set='train', args=args)
+#dataset_val = build_dataset(image_set='val', args=args)
 
-sampler_train = torch.utils.data.RandomSampler(dataset_train)
-sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+#sampler_train = torch.utils.data.RandomSampler(dataset_train)
+#sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
-batch_sampler_train = torch.utils.data.BatchSampler(
-        sampler_train, args.batch_size, drop_last=True)
-
-
-data_loader_train = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
-                                 drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
-data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
-                                 drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
+#batch_sampler_train = torch.utils.data.BatchSampler(
+        #sampler_train, args.batch_size, drop_last=True)
 
 
+#data_loader_train = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
+                                 #drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
+#data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
+                                 #drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
 
 
 
-base_ds = get_coco_api_from_dataset(dataset_val)
+
+
+#base_ds = get_coco_api_from_dataset(dataset_val)
 
 
 optimizer = torch.optim.AdamW(param_dicts, lr=args.lr,

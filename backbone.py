@@ -115,8 +115,8 @@ class Joiner(nn.Sequential):
 class MJ_CONV2_BASE(nn.Module):
     def __init__(self, backbone: nn.Module):
         super().__init__()
-        self.body = IntermediateLayerGetter(backbone, return_layers={'conv1': "0"})
-        self.num_channels = 2048
+        self.body = IntermediateLayerGetter(backbone, return_layers={'conv3': "0"})
+        self.num_channels = 16
 
     def forward(self, tensor_list: NestedTensor):
         xs = self.body(tensor_list.tensors)
@@ -143,16 +143,16 @@ class MJ_MODIFIED_BACKBONE(MJ_CONV2_BASE):
 class MJ_CONV2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv1d(1, 2, kernel_size = 5012)
-        #self.conv2 = nn.Conv1d(64, 256, kernel_size = 512)
-        #self.conv3 = nn.Conv1d(256, 1024, kernel_size = 32)
+        self.conv1 = nn.Conv1d(1, 8, kernel_size = 256)
+        self.conv2 = nn.Conv1d(8, 16, kernel_size = 256)
+        self.conv3 = nn.Conv1d(16, 16, kernel_size = 256)
         #self.conv4 = nn.Conv1d(1024, 2048, kernel_size = 32)
 
 
     def forward(self, x):
         xs = self.conv1(x)
         xs = self.conv2(xs)
-        #xs = self.conv3(xs)
+        xs = self.conv3(xs)
         #xs = self.conv4(xs)
 
 
@@ -168,5 +168,5 @@ def build_backbone(args):
     
     model = Joiner(backbone2, position_embedding)
     #model.num_channels = backbone.num_channels
-    model.num_channels = 2
+    model.num_channels = 16
     return model
