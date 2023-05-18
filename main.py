@@ -147,8 +147,11 @@ def custom_collate(original_batch):
     food_list = food_list.float()
     return food_list,label_list
 
-training_dataset = dreams_dataset()
-trainloader = DataLoader(training_dataset, batch_size=batch_s, shuffle=True, num_workers=0, collate_fn=custom_collate)
+dataset = dreams_dataset()
+train_size = int(len(dataset)* 0.9)
+val_size = int(len(dataset) - train_size)
+dataset_train, dataset_val = torch.utils.data.random_split(dataset, [train_size,val_size])
+dataset_val = dataset_train
 
 
 EPOCHS = 1
@@ -185,27 +188,6 @@ param_dicts = [
         },
     ]
 
-#dataset_train = build_dataset(image_set='train', args=args)
-#dataset_val = build_dataset(image_set='val', args=args)
-
-#sampler_train = torch.utils.data.RandomSampler(dataset_train)
-#sampler_val = torch.utils.data.SequentialSampler(dataset_val)
-
-#batch_sampler_train = torch.utils.data.BatchSampler(
-        #sampler_train, args.batch_size, drop_last=True)
-
-
-#data_loader_train = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
-                                 #drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
-#data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
-                                 #drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
-
-
-
-
-
-#base_ds = get_coco_api_from_dataset(dataset_val)
-
 
 optimizer = torch.optim.AdamW(param_dicts, lr=args.lr,
                                   weight_decay=args.weight_decay)
@@ -217,9 +199,6 @@ training_accuracy = []
 training_loss = []
 validation_accuracy = []
 validation_loss = []
-
-
-#food, label = next(iter(data_loader_train))
 
 
 #=======================================================================#
@@ -234,29 +213,18 @@ for epoch in range(EPOCHS):  # loop over the dataset multiple times
         running_loss = []
         labels_temp = []
         for i, data in enumerate(tepoch):
-            tepoch.set_description(f"{bcolors.WARNING} T Epoch {bcolors.ENDC} {epoch}")
+            #tepoch.set_description(f"{bcolors.WARNING} T Epoch {bcolors.ENDC} {epoch}")
             
 
             food, labels = data
-            food = torch.stack(food)
             food = food.to(device)
-            food = food.float()
 
-            #labels = torch.stack(labels)
-            #labels = labels.to(device)
-            #food = food.float()
-
-
-            #food = food.to(device)
             labels = [{k: v.to(device) for k, v in t.items()} for t in labels]
-            #print(labels)
 
             # Model training procedures
             optimizer.zero_grad()
             outputs = net(food)
-            #predictions = outputs.argmax(dim=1, keepdim=True).squeeze()
-            #print(labels.type())
-            #print(outputs.type())
+
             loss_dict = criterion(outputs, labels)
             weight_dict = criterion.weight_dict
             losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)
@@ -273,48 +241,42 @@ for epoch in range(EPOCHS):  # loop over the dataset multiple times
             # tqdm progress bar update
             if (i % 10 == 9) or (i == 0):
                 tepoch.set_postfix(loss=sum(running_loss)/len(running_loss), accuracy=0)
-            #sleep(0.1)
 
     # Saving accuracy and loss values    
-    #training_accuracy.append(100. * (sum(running_acc)/len(running_acc)))
-    #training_loss.append(loss.item())
         
 
-    # net.eval()
-    # with tqdm(data_loader_val, unit="batch") as tepoch:
-    #     running_acc = []
-    #     running_loss = []
-    #     for i, data in enumerate(tepoch):
-    #     # get the inputs; data is a list of [inputs, labels]
-    #         tepoch.set_description(f"{bcolors.HEADER} V Epoch {bcolors.ENDC} {epoch}")
-    #         # Loading the 4 different frequency bands and their respective label
-    #         # Loading everything to device for GPU training
-    #         food, labels = data
-    #         food = food.to(device)
-    #         labels = labels.to(device)
+    net.eval()
+    with tqdm(data_loader_val, unit="batch") as tepoch:
+        running_acc = []
+        running_loss = []
+        for i, data in enumerate(tepoch):
+        # get the inputs; data is a list of [inputs, labels]
+            #tepoch.set_description(f"{bcolors.HEADER} V Epoch {bcolors.ENDC} {epoch}")
+            # Loading the 4 different frequency bands and their respective label
+            # Loading everything to device for GPU training
+            food, labels = data
+            food = food.to(device)
+            labels = [{k: v.to(device) for k, v in t.items()} for t in labels]
 
-    #         # Model training procedures
-    #         optimizer.zero_grad()
-    #         outputs = net(food)
-    #        # predictions = outputs.argmax(dim=1, keepdim=True).squeeze()
-    #         loss = criterion(outputs, labels)
-    #         loss.backward()
-    #         optimizer.step()
-
-    #         # Calculating metrics: loss and accuracy
-    #         running_loss.append(loss.item())
-    #         #correct = (predictions == labels).sum().item()
-    #         #accuracy = correct / batch_s
-    #        # running_acc.append(accuracy)
+            # Model training procedures
+            optimizer.zero_grad()
+            outputs = net(food)
+           # predictions = outputs.argmax(dim=1, keepdim=True).squeeze()
+            loss_dict = criterion(outputs, labels)
+            weight_dict = criterion.weight_dict
+            losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)
+            # Calculating metrics: loss and accuracy
+            running_loss.append(losses.item())
+           # running_acc.append(accuracy)
             
-    #         # tqdm progress bar update
-    #         if (i % 10 == 9) or (i == 0):
-    #             tepoch.set_postfix(loss=sum(running_loss)/len(running_loss), accuracy=0)
-    #         sleep(0.1)
+            # tqdm progress bar update
+            if (i % 10 == 9) or (i == 0):
+                tepoch.set_postfix(loss=sum(running_loss)/len(running_loss), accuracy=0)
+            sleep(0.1)
     
-    # # Saving accuracy and loss values 
-    # #validation_accuracy.append(100. * (sum(running_acc)/len(running_acc)))
-    # validation_loss.append(loss.item())
+    # Saving accuracy and loss values 
+    #validation_accuracy.append(100. * (sum(running_acc)/len(running_acc)))
+    #validation_loss.append(loss.item())
 print("=========================================LABELS======================================================")
 print(labels)
 print("=========================================OUTPUTS======================================================")
