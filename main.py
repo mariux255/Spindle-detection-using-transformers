@@ -154,8 +154,8 @@ dataset_train, dataset_val = torch.utils.data.random_split(dataset, [train_size,
 dataset_val = dataset_train
 
 
-data_loader_train= DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-data_loader_val = DataLoader(dataset_val, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+data_loader_train= DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=0)
+data_loader_val = DataLoader(dataset_val, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
 
 
