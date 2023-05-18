@@ -218,7 +218,7 @@ for epoch in range(EPOCHS):  # loop over the dataset multiple times
         running_loss = []
         labels_temp = []
         for i, data in enumerate(tepoch):
-            #tepoch.set_description(f"{bcolors.WARNING} T Epoch {bcolors.ENDC} {epoch}")
+            tepoch.set_description(f" T Epoch {epoch}")
             
 
             food, labels = data
