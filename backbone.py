@@ -13,7 +13,7 @@ from typing import Dict, List
 
 from util.misc import NestedTensor, is_main_process
 
-from position_encoding import build_position_encoding
+from .position_encoding import build_position_encoding
 
 
 class FrozenBatchNorm2d(torch.nn.Module):
@@ -115,13 +115,14 @@ class Joiner(nn.Sequential):
 class MJ_CONV2_BASE(nn.Module):
     def __init__(self, backbone: nn.Module):
         super().__init__()
-        self.body = IntermediateLayerGetter(backbone, return_layers={'conv3': "0"})
-        self.num_channels = 16
+        self.body = IntermediateLayerGetter(backbone, return_layers={'conv5': "0"})
+        self.num_channels = 128
 
     def forward(self, tensor_list: NestedTensor):
         xs = self.body(tensor_list.tensors)
         out: Dict[str, NestedTensor] = {}
         for name, x in xs.items():
+            x = x[:,:,None,:]
             m = tensor_list.mask
             assert m is not None
             mask = F.interpolate(m[None].float(), size=x.shape[-1:]).to(torch.bool)[0]
@@ -143,20 +144,35 @@ class MJ_MODIFIED_BACKBONE(MJ_CONV2_BASE):
 class MJ_CONV2(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv1d(1, 8, kernel_size = 256)
-        self.conv2 = nn.Conv1d(8, 16, kernel_size = 256)
-        self.conv3 = nn.Conv1d(16, 16, kernel_size = 256)
-        #self.conv4 = nn.Conv1d(1024, 2048, kernel_size = 32)
-
+        self.conv1 = building_block(1,8, 5, 1)
+        self.conv2 = building_block(8,16, 5, 1)
+        self.conv3 = building_block(16,32, 5, 3)
+        self.conv4 = building_block(32,64, 5, 1)
+        self.conv5 = building_block(64,128, 5, 3)
 
     def forward(self, x):
         xs = self.conv1(x)
         xs = self.conv2(xs)
         xs = self.conv3(xs)
-        #xs = self.conv4(xs)
+        xs = self.conv4(xs)
+        xs = self.conv5(xs)
+
 
 
         return xs
+
+class building_block(nn.Module):
+    def __init__(self, in_channels, out_channels, k_size = 1, pool_k_size = 3):
+        super(building_block, self).__init__()
+
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size = k_size)
+        self.batch = nn.BatchNorm1d(out_channels)
+        self.max_pool = nn.MaxPool1d(kernel_size = pool_k_size)
+
+    def forward(self, x):
+        output = self.max_pool(self.batch(F.relu(self.conv(x))))
+
+        return output
 
 
 def build_backbone(args):
@@ -168,5 +184,5 @@ def build_backbone(args):
     
     model = Joiner(backbone2, position_embedding)
     #model.num_channels = backbone.num_channels
-    model.num_channels = 16
+    model.num_channels = 128
     return model
