@@ -208,7 +208,7 @@ validation_loss = []
 for epoch in range(EPOCHS):  # loop over the dataset multiple times
     net.train()
     
-    with tqdm(trainloader, unit="batch") as tepoch:
+    with tqdm(dataset_train, unit="batch") as tepoch:
         running_acc = []
         running_loss = []
         labels_temp = []
@@ -246,7 +246,7 @@ for epoch in range(EPOCHS):  # loop over the dataset multiple times
         
 
     net.eval()
-    with tqdm(data_loader_val, unit="batch") as tepoch:
+    with tqdm(dataset_val, unit="batch") as tepoch:
         running_acc = []
         running_loss = []
         for i, data in enumerate(tepoch):
