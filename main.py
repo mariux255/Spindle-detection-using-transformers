@@ -244,7 +244,7 @@ for epoch in range(EPOCHS):  # loop over the dataset multiple times
             #running_acc.append(accuracy)
             
             # tqdm progress bar update
-            if (i % 10 == 9) or (i == 0):
+            if (i % 20 == 19) or (i == 0):
                 tepoch.set_postfix(loss=sum(running_loss)/len(running_loss), accuracy=0)
 
     # Saving accuracy and loss values    
@@ -275,13 +275,13 @@ for epoch in range(EPOCHS):  # loop over the dataset multiple times
            # running_acc.append(accuracy)
             
             # tqdm progress bar update
-            if (i % 10 == 9) or (i == 0):
+            if (i % 20 == 19) or (i == 0):
                 tepoch.set_postfix(loss=sum(running_loss)/len(running_loss), accuracy=0)
-            sleep(0.1)
     
     # Saving accuracy and loss values 
     #validation_accuracy.append(100. * (sum(running_acc)/len(running_acc)))
     #validation_loss.append(loss.item())
+print(losses)
 print("=========================================LABELS======================================================")
 print(labels)
 print("=========================================OUTPUTS======================================================")
