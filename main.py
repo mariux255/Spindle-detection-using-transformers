@@ -135,16 +135,16 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
 
-
 def custom_collate(original_batch):
     label_list = []
     food_list = []
     for item in original_batch:
         food, label = item
-        food.to(device)
         label_list.append(label)
         food_list.append(food)
-    
+
+    food_list = torch.stack(food_list)
+    food_list = food_list.float()
     return food_list,label_list
 
 training_dataset = dreams_dataset()
