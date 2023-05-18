@@ -154,7 +154,7 @@ dataset_train, dataset_val = torch.utils.data.random_split(dataset, [train_size,
 dataset_val = dataset_train
 
 data_loader_train = DataLoader(dataset_train, batch_sampler=batch_sampler_train,collate_fn=custom_collate, num_workers=args.num_workers)
-data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,drop_last=False, collate_fn=custom_collate, num_workers=args.num_workers
+data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,drop_last=False, collate_fn=custom_collate, num_workers=args.num_workers)
 
 
 EPOCHS = 1
